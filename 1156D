@@ -1,0 +1,66 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+
+
+int main() {
+#ifndef ONLINE_JUDGE
+  freopen("data.in", "r", stdin);
+#endif
+
+
+  int n;
+  cin >> n;
+  vector<vector<pair<int, int>>>g(n);
+  for(int i = 0; i < n - 1; ++i) {
+    int u, v, c;
+    cin >> u >> v >> c;
+    u--, v--;
+    g[u].emplace_back(v, c);
+    g[v].emplace_back(u, c);
+  }
+
+  vector< vector<int> > start(n, vector<int>(2));
+  function<void(int, int)>preDfs = [&] (int u, int par) {
+    for(auto it : g[u]) {
+      int v = it.first, c = it.second;
+      if(v == par)
+        continue;
+      preDfs(v, u);
+      if(c == 0)
+        start[u][0] += start[v][0] + start[v][1];
+      else start[u][1] += start[v][1];
+      ++start[u][c];
+    }
+  };
+  preDfs(0, -1);
+  long long ret = 0;
+
+  function<void(int, int)>dfs = [&] (int u, int par) {
+    ret += start[u][0] + start[u][1];
+    for(auto it : g[u]) {
+      int v = it.first, c = it.second;
+      if(v == par)
+        continue;
+      vector<int>oldU = start[u], oldV = start[v];
+      if(c == 0) {
+        start[u][0] -= start[v][0] + start[v][1] + 1;
+      } else {
+        start[u][1] -= start[v][1] + 1;
+      }
+
+      if(c == 0) {
+        start[v][0] += start[u][1] + start[u][0] + 1;
+      } else {
+        start[v][1] += start[u][1] + 1;
+      }
+
+      dfs(v, u);
+      start[u] = oldU;
+      start[v] = oldV;
+    }
+  };
+
+  dfs(0, -1);
+  cout << ret;
+}
